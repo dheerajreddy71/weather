@@ -5,33 +5,44 @@ def get_lat_lon(village_name):
     geocoding_api_key = '80843f03ed6b4945a45f1bd8c51e5c2f'
     geocoding_url = f'https://api.opencagedata.com/geocode/v1/json?q={village_name}&key={geocoding_api_key}'
     
-    response = requests.get(geocoding_url)
-    data = response.json()
-    
-    if data['results']:
-        latitude = data['results'][0]['geometry']['lat']
-        longitude = data['results'][0]['geometry']['lng']
-        return latitude, longitude
-    else:
+    try:
+        response = requests.get(geocoding_url)
+        response.raise_for_status()  # Check for HTTP errors
+        data = response.json()
+        
+        if data['results']:
+            latitude = data['results'][0]['geometry']['lat']
+            longitude = data['results'][0]['geometry']['lng']
+            return latitude, longitude
+        else:
+            return None, None
+    except Exception as e:
+        st.error(f"Error fetching geocoding data: {e}")
         return None, None
 
 def get_weather_forecast(latitude, longitude):
     api_key = 'b53305cd6b960c1984aed0acaf76aa2e'
     weather_url = f'https://api.openweathermap.org/data/2.5/forecast?lat={latitude}&lon={longitude}&units=metric&cnt=40&appid={api_key}'
     
-    response = requests.get(weather_url)
-    data = response.json()
-    
-    if data['cod'] == '200':
-        forecast = []
-        for item in data['list']:
-            forecast.append({
-                'date': item['dt_txt'],
-                'temp': item['main']['temp'],
-                'weather': item['weather'][0]['description']
-            })
-        return forecast
-    else:
+    try:
+        response = requests.get(weather_url)
+        response.raise_for_status()  # Check for HTTP errors
+        data = response.json()
+        
+        if data['cod'] == '200':
+            forecast = []
+            for item in data['list']:
+                forecast.append({
+                    'date': item['dt_txt'],
+                    'temp': item['main']['temp'],
+                    'weather': item['weather'][0]['description']
+                })
+            return forecast
+        else:
+            st.error(f"Error fetching weather data: {data.get('message', 'Unknown error')}")
+            return None
+    except Exception as e:
+        st.error(f"Error fetching weather data: {e}")
         return None
 
 st.title('Weather Forecast for Village')
