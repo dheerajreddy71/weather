@@ -34,8 +34,11 @@ def get_weather_forecast(latitude, longitude):
         if data['cod'] == '200':
             forecast = []
             for item in data['list']:
+                date_time = item['dt_txt']
+                date, time = date_time.split(' ')
                 forecast.append({
-                    'date': item['dt_txt'],
+                    'date': date,
+                    'time': time,
                     'temp': item['main']['temp'],
                     'pressure': item['main']['pressure'],
                     'humidity': item['main']['humidity'],
