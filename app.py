@@ -1,16 +1,16 @@
 import streamlit as st
 import requests
-import os
 import pandas as pd
-from datetime import datetime
+
+geocoding_api_key = '80843f03ed6b4945a45f1bd8c51e5c2f'
+weather_api_key = 'b53305cd6b960c1984aed0acaf76aa2e'
 
 def get_lat_lon(village_name):
-    geocoding_api_key = os.getenv('GEOCODING_API_KEY')
     geocoding_url = f'https://api.opencagedata.com/geocode/v1/json?q={village_name}&key={geocoding_api_key}'
     
     try:
         response = requests.get(geocoding_url)
-        response.raise_for_status()
+        response.raise_for_status()  # Check for HTTP errors
         data = response.json()
         
         if data['results']:
@@ -18,26 +18,24 @@ def get_lat_lon(village_name):
             longitude = data['results'][0]['geometry']['lng']
             return latitude, longitude
         else:
-            st.error('Village not found.')
             return None, None
     except Exception as e:
         st.error(f"Error fetching geocoding data: {e}")
         return None, None
 
 def get_weather_forecast(latitude, longitude):
-    api_key = os.getenv('WEATHER_API_KEY')
-    weather_url = f'https://api.openweathermap.org/data/2.5/forecast?lat={latitude}&lon={longitude}&units=metric&cnt=40&appid={api_key}'
+    weather_url = f'https://api.openweathermap.org/data/2.5/forecast?lat={latitude}&lon={longitude}&units=metric&cnt=40&appid={weather_api_key}'
     
     try:
         response = requests.get(weather_url)
-        response.raise_for_status()
+        response.raise_for_status()  # Check for HTTP errors
         data = response.json()
         
         if data['cod'] == '200':
             forecast = []
             for item in data['list']:
                 forecast.append({
-                    'date': datetime.strptime(item['dt_txt'], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M'),
+                    'date': item['dt_txt'],
                     'temp': item['main']['temp'],
                     'pressure': item['main']['pressure'],
                     'humidity': item['main']['humidity'],
@@ -66,7 +64,8 @@ if st.button('Fetch Weather'):
             
             if forecast:
                 df = pd.DataFrame(forecast)
-                st.write('Weather Forecast:', df)
+                st.write('Weather Forecast:')
+                st.dataframe(df)
             else:
                 st.write('Weather forecast data not available.')
         else:
